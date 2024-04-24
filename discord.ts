@@ -47,6 +47,7 @@ discord.on("messageCreate", async (message) => {
 
 discord.on("interactionCreate", async (interaction) => {
   if (!interaction.isButton()) return
+  if( !interaction.message.author.bot) return
   const mode = interaction.customId.split("/")[0]
 
   if (mode === "send") {

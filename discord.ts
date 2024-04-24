@@ -104,3 +104,14 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
     await created.send(message)
   }
 }
+
+export async function findChannelAndSend(userId:string,message:string){
+
+}
+
+export async function channelFromUserId(userId:string){
+  const channel = await discord.channels.fetch(process.env.DISCORD_CHANNEL_ID) as TextChannel
+  const threads = await channel.threads.fetch()
+  const thread = threads.threads.find(t=>t.name.includes(userId))
+  return thread
+}

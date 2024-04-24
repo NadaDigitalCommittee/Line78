@@ -6,7 +6,7 @@ import {
   webhook,
 } from '@line/bot-sdk';
 import dotenv from "dotenv"
-import { createThreadAndSendMessages } from './discord.js';
+import { channelFromUserId, createThreadAndSendMessages } from './discord.js';
 import { MessageDB } from './db.js';
 dotenv.config()
 
@@ -25,20 +25,26 @@ export const textEventHandler = async (event: webhook.Event): Promise<MessageAPI
     return;
   }
 
-  const userId=event.source.userId as string;
-  await MessageDB.create({text:event.message.text,userId,dateTime:new Date().getTime()});
+  const userId = event.source.userId as string;
+  await MessageDB.create({ text: event.message.text, userId, dateTime: new Date().getTime() });
+  const channel = await channelFromUserId(userId);
 
-  if(event.message.text?.startsWith("質問")){
-    const messages=await MessageDB.aggregate([
+  if (event.message.text?.startsWith("質問")) {
+    if (channel) { return; }
+    const messages = await MessageDB.aggregate([
       { $match: { userId } },
       { $sort: { dateTime: -1 } },
       { $limit: 4 },
     ]).exec()
-    await createThreadAndSendMessages(userId,messages.map((m)=>m.text));
-  }  
+    await createThreadAndSendMessages(userId, messages.map((m) => m.text));
+    return;
+  }
+  if(channel){
+    await channel.send(event.message.text)
+  }
 };
 
-export async function send(message:string,userId:string){
+export async function send(message: string, userId: string) {
   await client.pushMessage({
     to: userId,
     messages: [{

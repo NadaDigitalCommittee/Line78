@@ -12,9 +12,9 @@ import express, {Application, Request, Response} from 'express';
 import { textEventHandler } from './line.js';
 
 
-// const middlewareConfig: MiddlewareConfig = {
-//   channelSecret: process.env.CHANNEL_SECRET || '',
-// };
+const middlewareConfig: MiddlewareConfig = {
+  channelSecret: process.env.CHANNEL_SECRET || '',
+};
 
 const PORT = process.env.PORT || 3000;
 
@@ -33,7 +33,7 @@ app.get(
 // This route is used for the Webhook.
 app.post(
   '/line',
-  // middleware(middlewareConfig),
+  middleware(middlewareConfig),
   async (req: Request, res: Response): Promise<Response> => {
     const callbackRequest: webhook.CallbackRequest = req.body;
     const events: webhook.Event[] = callbackRequest.events!;

@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, ComponentBuilder, EmbedBuilder, TextChannel } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, Collection, ComponentBuilder, EmbedBuilder, GuildMember, TextChannel } from "discord.js";
 import { send } from "./line.js";
 import dotenv from "dotenv"
 dotenv.config()
@@ -11,15 +11,19 @@ const discord = new Client({
   ]
 })
 
-discord.on("ready", () => {
+const members: string[]=[]
+
+discord.on("ready", async () => {
   console.log("Bot is ready")
+  const channel = await discord.channels.fetch(process.env.DISCORD_CHANNEL_ID) as TextChannel
+  members.push(...channel.members.map(member=>member.id))
 })
 
 
 discord.login(process.env.DISCORD_TOKEN)
 
 discord.on("messageCreate", async (message) => {
-  if(message.author.bot){
+  if (message.author.bot) {
     return;
   }
   const channel = message.channel
@@ -37,7 +41,7 @@ discord.on("messageCreate", async (message) => {
     .setLabel('送信')
     .setStyle(ButtonStyle.Danger);
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button)
-  
+
   await message.reply({
     content: "このメッセージをほんまに送信しますか？",
     components: [row]
@@ -46,7 +50,7 @@ discord.on("messageCreate", async (message) => {
 
 discord.on("interactionCreate", async (interaction) => {
   if (!interaction.isButton()) return
-  const mode = interaction.customId.split("/")[0] 
+  const mode = interaction.customId.split("/")[0]
 
   if (mode === "send") {
     const userId = interaction.customId.split("/")[1]
@@ -63,26 +67,30 @@ discord.on("interactionCreate", async (interaction) => {
       ephemeral: true
     })
     return;
-  }else if(mode==="close"){
-    if(interaction.channel.isThread()){
+  } else if (mode === "close") {
+    if (interaction.channel.isThread()) {
       await interaction.channel.delete()
     }
   }
 })
 
 
-export async function createThreadAndSendMessages(userId:string,messages:string[]){
+export async function createThreadAndSendMessages(userId: string, messages: string[]) {
   const channel = await discord.channels.fetch(process.env.DISCORD_CHANNEL_ID) as TextChannel
-  const now=Intl.DateTimeFormat('ja-JP', {
+  const now = Intl.DateTimeFormat('ja-JP', {
     timeZone: 'Asia/Tokyo',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
   }).format(new Date())
-  const created=await channel.threads.create({
+  const created = await channel.threads.create({
     name: `問い合わせ${now}/${userId}`,
     autoArchiveDuration: 1440,
-  })  
+  })
+
+  for await (const member of members) {
+    await created.members.add(member)
+  }
 
   const button = new ButtonBuilder()
     .setCustomId(`close`)
@@ -95,7 +103,7 @@ export async function createThreadAndSendMessages(userId:string,messages:string[
     components: [row]
   })
 
-  for(const message of messages){
+  for (const message of messages) {
     await created.send(message)
   }
 }

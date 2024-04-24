@@ -34,7 +34,6 @@ export const textEventHandler = async (event: webhook.Event): Promise<MessageAPI
       { $sort: { dateTime: -1 } },
       { $limit: 4 },
     ]).exec()
-    console.log(messages,"メッセージ")
     await createThreadAndSendMessages(userId,messages.map((m)=>m.text));
   }  
 };

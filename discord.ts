@@ -18,8 +18,7 @@ discord.on("ready", async () => {
   const channel = await discord.channels.fetch(process.env.DISCORD_CHANNEL_ID) as TextChannel
   const a=channel.members.map(member=>member.id)
   console.log(a)
-  members.push(...a)
-  
+  members.push(...a)  
 })
 
 

@@ -27,7 +27,16 @@ export const textEventHandler = async (event: webhook.Event): Promise<MessageAPI
 
   const userId=event.source.userId as string;
   await MessageDB.create({text:event.message.text,userId});
-  await createThreadAndSendMessages(userId,[]);
+
+  if(event.message.text?.startsWith("質問")){
+    const messages=await MessageDB.aggregate([
+      { $match: { userId } },
+      { $sort: { datetime: -1 } },
+      { $limit: 3 },
+      { $sort: { datetime: 1 } }
+    ]).exec()
+    await createThreadAndSendMessages(userId,messages);
+  }  
 };
 
 export async function send(message:string,userId:string){

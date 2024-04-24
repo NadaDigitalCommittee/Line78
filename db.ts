@@ -7,7 +7,8 @@ connect()
 
 const schema=new Schema({
   text:String,
-  userId:String
+  userId:String,
+  dateTime:Date
 })
 
 export const MessageDB=mongoose.model("Message",schema)

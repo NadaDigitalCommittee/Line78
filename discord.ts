@@ -59,15 +59,11 @@ discord.on("interactionCreate", async (interaction) => {
     }
     const content = replyMessage.content
     console.log(content,"コンテント",replyMessage)
-    await send(content, userId)
-    await interaction.message.edit({
-      content: "送信しました",
-      embeds:[]
-    })
+    await send(content, userId)    
     await interaction.reply({
       content: "送信しました",
-      ephemeral: true
     })
+    await interaction.message.delete()
     return;
   } else if (mode === "close") {
     if (interaction.channel.isThread()) {

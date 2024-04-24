@@ -61,7 +61,7 @@ discord.on("interactionCreate", async (interaction) => {
     const content = replyMessage.content
     console.log(content,"コンテント",replyMessage)
     await send(content, userId)    
-    await interaction.reply({
+    await replyMessage.reply({
       content: "送信しました",
     })
     await interaction.message.delete()

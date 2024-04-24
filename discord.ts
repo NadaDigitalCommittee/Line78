@@ -75,6 +75,18 @@ export async function createThreadAndSendMessages(userId:string,messages:string[
     name: `問い合わせ${hour}:${minute}/${userId}`,
     autoArchiveDuration: 1440,
   })  
+
+  const button = new ButtonBuilder()
+    .setCustomId(`close`)
+    .setLabel('削除')
+    .setStyle(ButtonStyle.Danger);
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button)
+
+  await created.send({
+    content: "スレッドを削除する",
+    components: [row]
+  })
+
   for(const message of messages){
     await created.send(message)
   }

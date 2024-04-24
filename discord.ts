@@ -8,17 +8,12 @@ const discord = new Client({
     "Guilds",
     "GuildMembers",
     "GuildMessages",
+    "MessageContent"
   ]
 })
 
-const members: string[]=[]
-
 discord.on("ready", async () => {
   console.log("Bot is ready")
-  const channel = await discord.channels.fetch(process.env.DISCORD_CHANNEL_ID) as TextChannel
-  const a=channel.members.map(member=>member.id)
-  console.log(a)
-  members.push(...a)  
 })
 
 
@@ -95,10 +90,7 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
     autoArchiveDuration: 1440,
     type: ChannelType.PublicThread
   })
-  for await (const member of members) {
-    await created.members.add(member)
-  }
-
+  
   const button = new ButtonBuilder()
     .setCustomId(`close`)
     .setLabel('削除')

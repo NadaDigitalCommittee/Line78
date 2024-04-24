@@ -63,6 +63,7 @@ discord.on("interactionCreate", async (interaction) => {
       return;
     }
     const content = replyMessage.content
+    console.log(content,"コンテント")
     await send(content, userId)
     interaction.reply({
       content: "送信しました",
@@ -79,14 +80,13 @@ discord.on("interactionCreate", async (interaction) => {
 
 export async function createThreadAndSendMessages(userId: string, messages: string[]) {
   const channel = await discord.channels.fetch(process.env.DISCORD_CHANNEL_ID) as TextChannel
-  console.log("い")
   const now = Intl.DateTimeFormat('ja-JP', {
     timeZone: 'Asia/Tokyo',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
   }).format(new Date())
-  console.log(now)
+  
   const created = await channel.threads.create({
     name: `問い合わせ${now}/${userId}`,
     autoArchiveDuration: 1440,

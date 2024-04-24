@@ -26,6 +26,9 @@ export const textEventHandler = async (event: webhook.Event): Promise<MessageAPI
   }
 
   const userId = event.source.userId as string;
+  if(userId!=="U3f8d77134579d47115dbab5512c9d360"){
+    return;
+  }
   await MessageDB.create({ text: event.message.text, userId, dateTime: new Date().getTime() });
   const channel = await channelFromUserId(userId);
 

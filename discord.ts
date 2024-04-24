@@ -90,9 +90,8 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
   const created = await channel.threads.create({
     name: `問い合わせ${now}/${userId}`,
     autoArchiveDuration: 1440,
-    type: ChannelType.PrivateThread
+    type: ChannelType.PublicThread
   })
-
   for await (const member of members) {
     await created.members.add(member)
   }

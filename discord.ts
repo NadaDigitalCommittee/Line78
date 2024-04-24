@@ -16,7 +16,10 @@ const members: string[]=[]
 discord.on("ready", async () => {
   console.log("Bot is ready")
   const channel = await discord.channels.fetch(process.env.DISCORD_CHANNEL_ID) as TextChannel
-  members.push(...channel.members.map(member=>member.id))
+  const a=channel.members.map(member=>member.id)
+  console.log(a)
+  members.push(...a)
+  
 })
 
 

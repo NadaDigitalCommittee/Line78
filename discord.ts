@@ -57,7 +57,7 @@ discord.on("interactionCreate", async (interaction) => {
   if (mode === "send") {
     const userId = interaction.customId.split("/")[1]
     const replyMessageId = interaction.message.reference?.messageId
-    const replyMessage = await interaction.channel?.messages.fetch(replyMessageId)
+    const replyMessage = interaction.channel?.messages.cache.get(replyMessageId)
     if (!replyMessage) {
       interaction.reply("エラーが発生しました。")
       return;
@@ -65,7 +65,10 @@ discord.on("interactionCreate", async (interaction) => {
     const content = replyMessage.content
     console.log(content,"コンテント",replyMessage)
     await send(content, userId)
-    interaction.reply({
+    await interaction.message.edit({
+      content: "送信しました",
+    })
+    await interaction.reply({
       content: "送信しました",
       ephemeral: true
     })

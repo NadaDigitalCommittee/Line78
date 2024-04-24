@@ -26,7 +26,7 @@ export const textEventHandler = async (event: webhook.Event): Promise<MessageAPI
   }
 
   const userId=event.source.userId as string;
-  await MessageDB.create({text:event.message.text,userId,dateTime:new Date()});
+  await MessageDB.create({text:event.message.text,userId,dateTime:new Date().getTime()});
 
   if(event.message.text?.startsWith("質問")){
     const messages=await MessageDB.aggregate([

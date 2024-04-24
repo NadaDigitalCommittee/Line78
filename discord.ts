@@ -63,7 +63,7 @@ discord.on("interactionCreate", async (interaction) => {
       return;
     }
     const content = replyMessage.content
-    console.log(content,"コンテント")
+    console.log(content,"コンテント",replyMessage)
     await send(content, userId)
     interaction.reply({
       content: "送信しました",

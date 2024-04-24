@@ -21,6 +21,7 @@ const isTextEvent = (event: any): event is webhook.MessageEvent & { message: web
 };
 
 export const textEventHandler = async (event: webhook.Event): Promise<MessageAPIResponseBase | undefined> => {
+  console.log(event,"イベント来てるよ！！！！！")
   if (!isTextEvent(event)) {
     return;
   }

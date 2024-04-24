@@ -62,6 +62,7 @@ discord.on("interactionCreate", async (interaction) => {
     await send(content, userId)
     await interaction.message.edit({
       content: "送信しました",
+      embeds:[]
     })
     await interaction.reply({
       content: "送信しました",
@@ -90,7 +91,7 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
     autoArchiveDuration: 1440,
     type: ChannelType.PublicThread
   })
-  
+
   const button = new ButtonBuilder()
     .setCustomId(`close`)
     .setLabel('削除')

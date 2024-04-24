@@ -19,6 +19,9 @@ discord.on("ready", () => {
 discord.login(process.env.DISCORD_TOKEN)
 
 discord.on("messageCreate", async (message) => {
+  if(message.author.bot){
+    return;
+  }
   const channel = message.channel
   if (!channel.isThread()) {
     return;
@@ -34,6 +37,7 @@ discord.on("messageCreate", async (message) => {
     .setLabel('送信')
     .setStyle(ButtonStyle.Danger);
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button)
+  
   await message.reply({
     content: "ボタンを押してね",
     components: [row]

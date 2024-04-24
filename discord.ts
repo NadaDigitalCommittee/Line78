@@ -39,7 +39,7 @@ discord.on("messageCreate", async (message) => {
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button)
   
   await message.reply({
-    content: "ボタンを押してね",
+    content: "このメッセージをほんまに送信しますか？",
     components: [row]
   })
 })
@@ -53,7 +53,7 @@ discord.on("interactionCreate", async (interaction) => {
     const replyMessageId = interaction.message.reference?.messageId
     const replyMessage = await interaction.channel?.messages.fetch(replyMessageId)
     if (!replyMessage) {
-      interaction.reply("エラーが発生しました")
+      interaction.reply("エラーが発生しました。")
       return;
     }
     const content = replyMessage.content
@@ -65,7 +65,7 @@ discord.on("interactionCreate", async (interaction) => {
     return;
   }else if(mode==="close"){
     if(interaction.channel.isThread()){
-      await interaction.channel.setArchived(true)
+      await interaction.channel.delete()
     }
   }
 })
@@ -91,7 +91,7 @@ export async function createThreadAndSendMessages(userId:string,messages:string[
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button)
 
   await created.send({
-    content: "スレッドを削除する",
+    content: "スレッドを削除する。",
     components: [row]
   })
 

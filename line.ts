@@ -21,15 +21,13 @@ const isTextEvent = (event: any): event is webhook.MessageEvent & { message: web
 };
 
 export const textEventHandler = async (event: webhook.Event): Promise<MessageAPIResponseBase | undefined> => {
-  console.log(event,"イベント来てるよ！！！！！")
+  
   if (!isTextEvent(event)) {
     return;
   }
 
   const userId = event.source.userId as string;
-  if(userId!=="Udcb5703cf0ab344cfe2ca71f3c42e548"){
-    return;
-  }
+  
   await MessageDB.create({ text: event.message.text, userId, dateTime: new Date().getTime() });
   const channel = await channelFromUserId(userId);
 

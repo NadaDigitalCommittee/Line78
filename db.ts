@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-async function connect() {
+export async function connect() {
   await mongoose.connect(process.env.MONGODB_URI);
 }
 connect()

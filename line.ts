@@ -31,7 +31,7 @@ export const textEventHandler = async (event: webhook.Event): Promise<MessageAPI
   if(event.message.text?.startsWith("質問")){
     const messages=await MessageDB.aggregate([
       { $match: { userId } },
-      { $sort: { datetime: -1 } },
+      { $sort: { dateTime: -1 } },
       { $limit: 3 },
     ]).exec()
     console.log(messages,"メッセージ")

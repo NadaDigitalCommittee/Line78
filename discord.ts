@@ -65,7 +65,7 @@ discord.on("interactionCreate", async (interaction) => {
     return;
   }else if(mode==="close"){
     if(interaction.channel.isThread()){
-      await interaction.channel.delete()
+      await interaction.channel.setArchived(true)
     }
   }
 })

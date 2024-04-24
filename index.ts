@@ -35,6 +35,7 @@ app.post(
   '/line',
   middleware(middlewareConfig),
   async (req: Request, res: Response): Promise<Response> => {
+    console.log(req.body)
     const callbackRequest: webhook.CallbackRequest = req.body;
     const events: webhook.Event[] = callbackRequest.events!;
 

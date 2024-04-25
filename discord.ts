@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, Client, Collection, ComponentBuilder, EmbedBuilder, GuildMember, TextChannel } from "discord.js";
-import { send } from "./line.js";
+import { getUserName, send } from "./line.js";
 import dotenv from "dotenv"
 dotenv.config()
 
@@ -86,7 +86,7 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
   }).format(new Date())
   
   const created = await channel.threads.create({
-    name: `問い合わせ${now}/${userId}`,
+    name: `${now}-${getUserName(userId)}/${userId}`,
     autoArchiveDuration: 1440,
     type: ChannelType.PublicThread
   })

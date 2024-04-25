@@ -55,3 +55,8 @@ export async function send(message: string, userId: string) {
     }],
   });
 }
+
+export async function getUserName(userId: string) {
+  const profile = await client.getProfile(userId)
+  return profile.displayName.replace("/","");
+}

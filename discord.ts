@@ -37,7 +37,8 @@ discord.on("messageCreate", async (message) => {
     .setCustomId(`send/${userId}`)
     .setLabel('送信')
     .setStyle(ButtonStyle.Danger);
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button)
+    const button2=new ButtonBuilder().setCustomId("delete").setEmoji("🗑️").setStyle(ButtonStyle.Primary)
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button,button2)
 
   await message.reply({
     content: "このメッセージをほんまに送信しますか？",
@@ -59,7 +60,6 @@ discord.on("interactionCreate", async (interaction) => {
       return;
     }
     const content = replyMessage.content
-    console.log(content,"コンテント",replyMessage)
     await send(content, userId)    
     await replyMessage.reply({
       content: "送信しました",
@@ -70,6 +70,8 @@ discord.on("interactionCreate", async (interaction) => {
     if (interaction.channel.isThread()) {
       await interaction.channel.delete()
     }
+  }else if(mode==="delete"){
+    await interaction.message.delete()
   }
 })
 

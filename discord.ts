@@ -86,7 +86,7 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
   }).format(new Date())
   
   const created = await channel.threads.create({
-    name: `${now}-${getUserName(userId)}/${userId}`,
+    name: `${now}-${await getUserName(userId)}/${userId}`,
     autoArchiveDuration: 1440,
     type: ChannelType.PublicThread
   })
@@ -105,10 +105,6 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
   for (const message of messages) {
     await created.send(message)
   }
-}
-
-export async function findChannelAndSend(userId:string,message:string){
-
 }
 
 export async function channelFromUserId(userId:string){

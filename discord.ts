@@ -59,7 +59,9 @@ discord.on("interactionCreate", async (interaction) => {
       interaction.reply("エラーが発生しました。")
       return;
     }
-    const content = replyMessage.content
+    let content = replyMessage.content
+    const attachments = replyMessage.attachments
+    content+="\n"+attachments.map(a=>a.url).join("\n")
     await send(content, userId)    
     await replyMessage.reply({
       content: "送信しました",

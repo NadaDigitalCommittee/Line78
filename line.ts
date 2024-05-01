@@ -31,7 +31,7 @@ export const textEventHandler = async (event: webhook.Event): Promise<MessageAPI
   await MessageDB.create({ text: event.message.text, userId, dateTime: new Date().getTime() });
   const channel = await channelFromUserId(userId);
 
-  if (event.message.text?.startsWith("質問")) {
+  if (event.message.text?.includes("質問")) {
     if (channel) { return; }
     const messages = await MessageDB.aggregate([
       { $match: { userId } },

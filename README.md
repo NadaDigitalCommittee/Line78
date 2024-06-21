@@ -14,3 +14,6 @@ LINE公式アカウントの操作画面では、大人数に対し対応をす�
 
 ## 環境変数について
 
+https://developers.line.biz/ja/reference/messaging-api/#issue-shortlived-channel-access-token
+
+に従ってCHANNEL_ACCESS_TOKENを取得する。

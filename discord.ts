@@ -4,6 +4,7 @@ import {
   ButtonStyle,
   ChannelType,
   Client,
+  Message,
   TextChannel,
   type TextThreadChannel,
 } from "discord.js"
@@ -20,14 +21,21 @@ discord.on("ready", async () => {
 
 discord.login(Bun.env.DISCORD_TOKEN)
 
+const getMessageContent = (message: Message) =>
+  message.content.replace(new RegExp(`<@!?${Bun.env.DISCORD_CLIENT_ID}>`, "g"), "").trim()
+
 discord.on("messageCreate", async (message) => {
-  if (message.author.bot) {
-    return
-  }
-  const channel = message.channel
-  if (!channel.isThread()) {
-    return
-  }
+  if (message.author.bot) return
+  const repliedMessage =
+    message.reference?.messageId &&
+    (await message.channel.messages.fetch(message.reference.messageId))
+  const hasMention = discord.user && message.mentions.has(discord.user)
+  if (!(repliedMessage || hasMention)) return
+  const channel = repliedMessage ? repliedMessage.channel : message.channel
+  if (!channel.isThread()) return
+
+  const messageContent = getMessageContent(message)
+  if (!messageContent) return
   const { userId } = (await ThreadDB.findOne({ threadId: channel.id })) ?? {}
   if (!userId) return
   const button = new ButtonBuilder()
@@ -54,9 +62,15 @@ discord.on("interactionCreate", async (interaction) => {
   if (mode === "send") {
     const userId = interaction.customId.split("/")[1]
     const replyMessageId = interaction.message.reference?.messageId
-    const replyMessage = interaction.channel?.messages.cache.get(replyMessageId)
+    const replyMessage = replyMessageId && interaction.channel?.messages.cache.get(replyMessageId)
     if (!replyMessage) {
-      interaction.reply("エラーが発生しました。")
+      interaction.reply("送信するメッセージの内容を取得できません。")
+      return
+    }
+    if (!userId) {
+      await replyMessage.reply({
+        content: "送信先ユーザーを取得できません。",
+      })
       return
     }
     let content = replyMessage.content

@@ -9,7 +9,7 @@ import { channelFromUserId, createThreadAndSendMessages } from "./discord"
 import { MessageDB } from "./db"
 
 const clientConfig: ClientConfig = {
-  channelAccessToken: Bun.env.CHANNEL_ACCESS_TOKEN || "",
+  channelAccessToken: Bun.env.LINE_CHANNEL_ACCESS_TOKEN,
 }
 
 const client = new messagingApi.MessagingApiClient(clientConfig)

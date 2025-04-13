@@ -1,62 +1,90 @@
-import { middleware, type MiddlewareConfig, webhook, HTTPFetchError } from "@line/bot-sdk"
-import express, { type Application, type Request, type Response } from "express"
-
+import { HTTPFetchError, type WebhookRequestBody } from "@line/bot-sdk"
+import { type Env as EnvBase } from "hono"
 import { textEventHandler } from "./line"
+import { Hono } from "hono"
+import { ApplicationIntegrationType, PermissionFlagsBits } from "discord.js"
 
-const middlewareConfig: MiddlewareConfig = {
-  channelSecret: Bun.env.CHANNEL_SECRET || "",
+const verifySignature = (body: string, secret: string, signature: string) => {
+  const hmac = new Bun.CryptoHasher("sha256", secret)
+  hmac.update(body)
+  return hmac.digest("base64") === signature
 }
 
-const PORT = Bun.env.PORT || 3000
+interface Env extends EnvBase {
+  Variables: {
+    lineReq: WebhookRequestBody
+  }
+}
 
-const app: Application = express()
-
-app.get("/", async (_: Request, res: Response): Promise<Response> => {
-  return res.status(200).json({
-    status: "success",
-    message: "Connected successfully!",
-  })
-})
-
-// This route is used for the Webhook.
-app.post(
-  "/line",
-  middleware(middlewareConfig),
-  async (req: Request, res: Response): Promise<Response> => {
-    const callbackRequest: webhook.CallbackRequest = req.body
-    const events: webhook.Event[] = callbackRequest.events!
-
-    // Process all the received events asynchronously.
-    const results = await Promise.all(
-      events.map(async (event: webhook.Event) => {
-        try {
-          await textEventHandler(event)
-        } catch (err: unknown) {
-          if (err instanceof HTTPFetchError) {
-            console.error(err.status)
-            console.error(err.headers.get("x-line-request-id"))
-            console.error(err.body)
-          } else if (err instanceof Error) {
-            console.error(err)
-          }
-
-          // Return an error message.
-          return res.status(500).json({
-            status: "error",
-          })
-        }
-      }),
-    )
-
-    // Return a successful message.
-    return res.status(200).json({
+const app = new Hono<Env>()
+  .get("/", (c) => {
+    return c.json({
       status: "success",
-      results,
+      message: "Connected successfully!",
     })
-  },
-)
+  })
+  .get("/invite", (c) => {
+    const permissions =
+      PermissionFlagsBits.CreatePublicThreads |
+      PermissionFlagsBits.ManageThreads |
+      PermissionFlagsBits.ReadMessageHistory |
+      PermissionFlagsBits.SendMessages |
+      PermissionFlagsBits.ViewChannel
+    const oAuth2Url = new URL("https://discord.com/oauth2/authorize")
+    oAuth2Url.search = new URLSearchParams({
+      permissions: `${permissions}`,
+      integration_type: `${ApplicationIntegrationType.GuildInstall}`,
+      scope: "bot",
+      client_id: Bun.env.DISCORD_CLIENT_ID,
+    }).toString()
+    return c.redirect(oAuth2Url)
+  })
+  .post(
+    "/line",
+    async (c, next) => {
+      const rawBody = await c.req.raw.clone().arrayBuffer()
+      const signature = c.req.header("x-line-signature")
+      const bodyText = new TextDecoder().decode(rawBody)
+      const isValid =
+        !!signature && verifySignature(bodyText, Bun.env.LINE_CHANNEL_SECRET, signature)
+      if (!isValid) return c.text("Invalid signature", 403)
+      c.set("lineReq", JSON.parse(bodyText) as WebhookRequestBody)
+      return await next()
+    },
+    async (c) => {
+      const events = c.var.lineReq.events
 
-// Create a server and listen to it.
-app.listen(PORT, () => {
-  console.log(`Application is live and listening on port ${PORT}`)
-})
+      // Process all the received events asynchronously.
+      const results = await Promise.all(
+        events.map(async (event) => {
+          try {
+            await textEventHandler(event)
+          } catch (err: unknown) {
+            if (err instanceof HTTPFetchError) {
+              console.error(err.status)
+              console.error(err.headers.get("x-line-request-id"))
+              console.error(err.body)
+            } else if (err instanceof Error) {
+              console.error(err)
+            }
+
+            // Return an error message.
+            return c.json(
+              {
+                status: "error",
+              },
+              500,
+            )
+          }
+        }),
+      )
+
+      // Return a successful message.
+      return c.json({
+        status: "success",
+        results,
+      })
+    },
+  )
+
+export default app

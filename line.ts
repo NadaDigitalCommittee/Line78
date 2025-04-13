@@ -8,7 +8,7 @@ import {
   type WebhookEvent,
 } from "@line/bot-sdk"
 import { fetchThreadFromUserId, createThreadAndSendMessages } from "./discord"
-import { MessageDB } from "./db"
+import { MessageDB, type MessageData } from "./db"
 import type { Attachment, Collection } from "discord.js"
 
 const clientConfig: ClientConfig = {
@@ -28,14 +28,18 @@ export const textEventHandler = async (
 ): Promise<MessageAPIResponseBase | undefined> => {
   if (!isTextEvent(event)) return
 
-  const userId = event.source.userId as string
-
-  await MessageDB.create({ text: event.message.text, userId, dateTime: new Date().getTime() })
+  const userId = event.source.userId
+  if (!userId) return
+  await MessageDB.create({
+    text: event.message.text,
+    userId,
+    dateTime: event.timestamp,
+  } satisfies MessageData)
   const thread = await fetchThreadFromUserId(userId)
 
   if (event.message.text?.includes("質問")) {
     if (thread) return
-    const messages = await MessageDB.aggregate([
+    const messages = await MessageDB.aggregate<MessageData>([
       { $match: { userId } },
       { $sort: { dateTime: -1 } },
       { $limit: 4 },

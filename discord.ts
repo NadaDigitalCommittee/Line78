@@ -9,7 +9,7 @@ import {
   type TextThreadChannel,
 } from "discord.js"
 import { getUserName, send } from "./line"
-import { ThreadDB } from "./db"
+import { ThreadDB, type ThreadData } from "./db"
 
 const discord = new Client({
   intents: ["Guilds", "GuildMessages", "MessageContent"],
@@ -108,7 +108,13 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
     autoArchiveDuration: 1440,
     type: ChannelType.PublicThread,
   })
-  await ThreadDB.create({ userId: userId, threadId: created.id })
+  await ThreadDB.updateOne(
+    { userId },
+    { $set: { userId, threadId: created.id } satisfies ThreadData },
+    {
+      upsert: true,
+    },
+  )
 
   for (const message of messages) {
     await created.send(message)
@@ -117,5 +123,13 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
 
 export async function fetchThreadFromUserId(userId: string) {
   const { threadId } = (await ThreadDB.findOne({ userId })) ?? {}
-  return threadId ? ((await discord.channels.fetch(threadId)) as TextThreadChannel) : null
+  return (
+    threadId
+      ? await discord.channels.fetch(threadId).catch(async (e) => {
+          console.error(e)
+          await ThreadDB.deleteOne({ userId })
+          return null
+        })
+      : null
+  ) as TextThreadChannel | null
 }

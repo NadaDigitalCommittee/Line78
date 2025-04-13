@@ -1,16 +1,13 @@
-import dotenv from "dotenv"
-dotenv.config()
+import { middleware, type MiddlewareConfig, webhook, HTTPFetchError } from "@line/bot-sdk"
+import express, { type Application, type Request, type Response } from "express"
 
-import { middleware, MiddlewareConfig, webhook, HTTPFetchError } from "@line/bot-sdk"
-import express, { Application, Request, Response } from "express"
-
-import { textEventHandler } from "./line.js"
+import { textEventHandler } from "./line"
 
 const middlewareConfig: MiddlewareConfig = {
-  channelSecret: process.env.CHANNEL_SECRET || "",
+  channelSecret: Bun.env.CHANNEL_SECRET || "",
 }
 
-const PORT = process.env.PORT || 3000
+const PORT = Bun.env.PORT || 3000
 
 const app: Application = express()
 

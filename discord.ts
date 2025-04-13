@@ -4,15 +4,9 @@ import {
   ButtonStyle,
   ChannelType,
   Client,
-  Collection,
-  ComponentBuilder,
-  EmbedBuilder,
-  GuildMember,
   TextChannel,
 } from "discord.js"
-import { getUserName, send } from "./line.js"
-import dotenv from "dotenv"
-dotenv.config()
+import { getUserName, send } from "./line"
 
 const discord = new Client({
   intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent"],
@@ -22,7 +16,7 @@ discord.on("ready", async () => {
   console.log("Bot is ready")
 })
 
-discord.login(process.env.DISCORD_TOKEN)
+discord.login(Bun.env.DISCORD_TOKEN)
 
 discord.on("messageCreate", async (message) => {
   if (message.author.bot) {
@@ -86,7 +80,7 @@ discord.on("interactionCreate", async (interaction) => {
 })
 
 export async function createThreadAndSendMessages(userId: string, messages: string[]) {
-  const channel = (await discord.channels.fetch(process.env.DISCORD_CHANNEL_ID)) as TextChannel
+  const channel = (await discord.channels.fetch(Bun.env.DISCORD_CHANNEL_ID)) as TextChannel
   const now = Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
     hour: "2-digit",
@@ -117,7 +111,7 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
 }
 
 export async function channelFromUserId(userId: string) {
-  const channel = (await discord.channels.fetch(process.env.DISCORD_CHANNEL_ID)) as TextChannel
+  const channel = (await discord.channels.fetch(Bun.env.DISCORD_CHANNEL_ID)) as TextChannel
   const threads = await channel.threads.fetch()
   const thread = threads.threads.find((t) => t.name.includes(userId))
   return thread

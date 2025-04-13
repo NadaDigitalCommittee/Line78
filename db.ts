@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose"
 
 export async function connect() {
-  await mongoose.connect(process.env.MONGODB_URI)
+  await mongoose.connect(Bun.env.MONGODB_URI)
 }
 connect()
 

@@ -1,12 +1,15 @@
 // Import all dependencies, mostly using destructuring for better view.
-import { ClientConfig, MessageAPIResponseBase, messagingApi, webhook } from "@line/bot-sdk"
-import dotenv from "dotenv"
-import { channelFromUserId, createThreadAndSendMessages } from "./discord.js"
-import { MessageDB } from "./db.js"
-dotenv.config()
+import {
+  type ClientConfig,
+  type MessageAPIResponseBase,
+  messagingApi,
+  webhook,
+} from "@line/bot-sdk"
+import { channelFromUserId, createThreadAndSendMessages } from "./discord"
+import { MessageDB } from "./db"
 
 const clientConfig: ClientConfig = {
-  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN || "",
+  channelAccessToken: Bun.env.CHANNEL_ACCESS_TOKEN || "",
 }
 
 const client = new messagingApi.MessagingApiClient(clientConfig)

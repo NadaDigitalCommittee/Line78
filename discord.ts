@@ -73,13 +73,18 @@ discord.on("interactionCreate", async (interaction) => {
       })
       return
     }
-    let content = replyMessage.content
+    const messageContent = getMessageContent(replyMessage)
     const attachments = replyMessage.attachments
-    content += "\n" + attachments.map((a) => a.url).join("\n")
-    await send(content, userId)
-    await replyMessage.reply({
-      content: "送信しました",
-    })
+    try {
+      await send(messageContent, userId, attachments)
+      await replyMessage.reply({
+        content: "送信しました",
+      })
+    } catch (e) {
+      await replyMessage.reply({
+        content: `メッセージを送信できません: ${(e as Error).message ?? "不明なエラー"}`,
+      })
+    }
     await interaction.message.delete()
     return
   } else if (mode === "close") {

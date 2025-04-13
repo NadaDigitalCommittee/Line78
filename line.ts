@@ -7,6 +7,7 @@ import {
 } from "@line/bot-sdk"
 import { fetchThreadFromUserId, createThreadAndSendMessages } from "./discord"
 import { MessageDB } from "./db"
+import type { Attachment, Collection } from "discord.js"
 
 const clientConfig: ClientConfig = {
   channelAccessToken: Bun.env.LINE_CHANNEL_ACCESS_TOKEN,
@@ -48,7 +49,24 @@ export const textEventHandler = async (
   if (thread) await thread.send(event.message.text)
 }
 
-export async function send(message: string, userId: string) {
+export async function send(
+  message: string,
+  userId: string,
+  attachments?: Collection<string, Attachment>,
+) {
+  const attachmentsToSend = attachments?.map(({ url, contentType }): messagingApi.Message => {
+    switch (contentType) {
+      case "image/png":
+      case "image/jpeg":
+        return {
+          type: "image",
+          originalContentUrl: url,
+          previewImageUrl: url,
+        }
+      default:
+        throw new Error("この形式のファイルには対応していません。")
+    }
+  })
   await client.pushMessage({
     to: userId,
     messages: [
@@ -56,6 +74,7 @@ export async function send(message: string, userId: string) {
         type: "text",
         text: message,
       },
+      ...(attachmentsToSend ?? []),
     ],
   })
 }

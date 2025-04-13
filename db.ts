@@ -1,14 +1,14 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose"
 
 export async function connect() {
-  await mongoose.connect(process.env.MONGODB_URI);
+  await mongoose.connect(process.env.MONGODB_URI)
 }
 connect()
 
-const schema=new Schema({
-  text:String,
-  userId:String,
-  dateTime:Number
+const schema = new Schema({
+  text: String,
+  userId: String,
+  dateTime: Number,
 })
 
-export const MessageDB=mongoose.model("Message",schema)
+export const MessageDB = mongoose.model("Message", schema)

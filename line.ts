@@ -5,7 +5,7 @@ import {
   messagingApi,
   webhook,
 } from "@line/bot-sdk"
-import { channelFromUserId, createThreadAndSendMessages } from "./discord"
+import { fetchThreadFromUserId, createThreadAndSendMessages } from "./discord"
 import { MessageDB } from "./db"
 
 const clientConfig: ClientConfig = {
@@ -30,12 +30,10 @@ export const textEventHandler = async (
   const userId = event.source.userId as string
 
   await MessageDB.create({ text: event.message.text, userId, dateTime: new Date().getTime() })
-  const channel = await channelFromUserId(userId)
+  const thread = await fetchThreadFromUserId(userId)
 
   if (event.message.text?.includes("質問")) {
-    if (channel) {
-      return
-    }
+    if (thread) return
     const messages = await MessageDB.aggregate([
       { $match: { userId } },
       { $sort: { dateTime: -1 } },
@@ -47,9 +45,7 @@ export const textEventHandler = async (
     )
     return
   }
-  if (channel) {
-    await channel.send(event.message.text)
-  }
+  if (thread) await thread.send(event.message.text)
 }
 
 export async function send(message: string, userId: string) {

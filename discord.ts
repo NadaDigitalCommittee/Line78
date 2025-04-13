@@ -5,8 +5,10 @@ import {
   ChannelType,
   Client,
   TextChannel,
+  type TextThreadChannel,
 } from "discord.js"
 import { getUserName, send } from "./line"
+import { ThreadDB } from "./db"
 
 const discord = new Client({
   intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent"],
@@ -26,12 +28,8 @@ discord.on("messageCreate", async (message) => {
   if (!channel.isThread()) {
     return
   }
-  const topic = channel.name
-  const topicArray = topic.split("/")
-  if (topicArray.length !== 2) {
-    return
-  }
-  const userId = topicArray[1]
+  const { userId } = (await ThreadDB.findOne({ threadId: channel.id })) ?? {}
+  if (!userId) return
   const button = new ButtonBuilder()
     .setCustomId(`send/${userId}`)
     .setLabel("送信")
@@ -71,7 +69,7 @@ discord.on("interactionCreate", async (interaction) => {
     await interaction.message.delete()
     return
   } else if (mode === "close") {
-    if (interaction.channel.isThread()) {
+    if (interaction.channel?.isThread()) {
       await interaction.channel.delete()
     }
   } else if (mode === "delete") {
@@ -89,10 +87,11 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
   }).format(new Date())
 
   const created = await channel.threads.create({
-    name: `${now}-${await getUserName(userId)}/${userId}`,
+    name: `${now}-${await getUserName(userId)}`,
     autoArchiveDuration: 1440,
     type: ChannelType.PublicThread,
   })
+  await ThreadDB.create({ userId: userId, threadId: created.id })
 
   const button = new ButtonBuilder()
     .setCustomId(`close`)
@@ -110,9 +109,7 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
   }
 }
 
-export async function channelFromUserId(userId: string) {
-  const channel = (await discord.channels.fetch(Bun.env.DISCORD_CHANNEL_ID)) as TextChannel
-  const threads = await channel.threads.fetch()
-  const thread = threads.threads.find((t) => t.name.includes(userId))
-  return thread
+export async function fetchThreadFromUserId(userId: string) {
+  const { threadId } = (await ThreadDB.findOne({ userId })) ?? {}
+  return threadId ? ((await discord.channels.fetch(threadId)) as TextThreadChannel) : null
 }

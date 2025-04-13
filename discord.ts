@@ -8,8 +8,8 @@ import {
   TextChannel,
   type TextThreadChannel,
 } from "discord.js"
-import { getUserName, send } from "./line"
-import { ThreadDB, type ThreadData } from "./db"
+import { getUsername, send } from "./line"
+import { ThreadDB, type MessageData, type ThreadData } from "./db"
 
 const discord = new Client({
   intents: ["Guilds", "GuildMessages", "MessageContent"],
@@ -78,7 +78,7 @@ discord.on("interactionCreate", async (interaction) => {
       try {
         await send(messageContent, userId, attachments)
         await replyMessage.reply({
-          content: "送信しました",
+          content: "送信しました。",
         })
       } catch (e) {
         await replyMessage.reply({
@@ -94,17 +94,23 @@ discord.on("interactionCreate", async (interaction) => {
   }
 })
 
-export async function createThreadAndSendMessages(userId: string, messages: string[]) {
-  const channel = (await discord.channels.fetch(Bun.env.DISCORD_CHANNEL_ID)) as TextChannel
-  const now = Intl.DateTimeFormat("ja-JP", {
-    timeZone: "Asia/Tokyo",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).format(new Date())
+const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+})
 
+export async function createThreadAndSendMessages(userId: string, messages: MessageData[]) {
+  const channel = (await discord.channels.fetch(Bun.env.DISCORD_CHANNEL_ID)) as TextChannel
+  const messageContents = messages.map((m) => m.text)
+  const timestamp = dateFormatter.format(messages[0]?.dateTime)
+
+  const username = await getUsername(userId)
   const created = await channel.threads.create({
-    name: `${now}-${await getUserName(userId)}`,
+    name: `${timestamp}-${username}`,
     autoArchiveDuration: 1440,
     type: ChannelType.PublicThread,
   })
@@ -116,9 +122,7 @@ export async function createThreadAndSendMessages(userId: string, messages: stri
     },
   )
 
-  for (const message of messages) {
-    await created.send(message)
-  }
+  await created.send(`*${timestamp} ${username}*\n>>> ${messageContents.join("\n")}`)
 }
 
 export async function fetchThreadFromUserId(userId: string) {

@@ -44,13 +44,10 @@ export const textEventHandler = async (
       { $sort: { dateTime: -1 } },
       { $limit: 4 },
     ]).exec()
-    await createThreadAndSendMessages(
-      userId,
-      messages.map((m) => m.text),
-    )
+    await createThreadAndSendMessages(userId, messages.reverse())
     return
   }
-  if (thread) await thread.send(event.message.text)
+  if (thread) await thread.send(`>>> ${event.message.text}`)
 }
 
 export async function send(
@@ -83,7 +80,7 @@ export async function send(
   })
 }
 
-export async function getUserName(userId: string) {
+export async function getUsername(userId: string) {
   const profile = await client.getProfile(userId)
   return profile.displayName.replace("/", "")
 }

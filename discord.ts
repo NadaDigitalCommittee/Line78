@@ -106,7 +106,7 @@ const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
 export async function createThreadAndSendMessages(userId: string, messages: MessageData[]) {
   const channel = (await discord.channels.fetch(Bun.env.DISCORD_CHANNEL_ID)) as TextChannel
   const messageContents = messages.map((m) => m.text)
-  const timestamp = dateFormatter.format(messages[0]?.dateTime)
+  const timestamp = dateFormatter.format(messages.at(-1)?.dateTime)
 
   const username = await getUsername(userId)
   const created = await channel.threads.create({

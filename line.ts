@@ -1,9 +1,11 @@
 // Import all dependencies, mostly using destructuring for better view.
 import {
   type ClientConfig,
+  type MessageEvent,
   type MessageAPIResponseBase,
   messagingApi,
-  webhook,
+  type TextEventMessage,
+  type WebhookEvent,
 } from "@line/bot-sdk"
 import { fetchThreadFromUserId, createThreadAndSendMessages } from "./discord"
 import { MessageDB } from "./db"
@@ -15,18 +17,16 @@ const clientConfig: ClientConfig = {
 
 const client = new messagingApi.MessagingApiClient(clientConfig)
 
-const isTextEvent = (
-  event: any,
-): event is webhook.MessageEvent & { message: webhook.TextMessageContent } => {
-  return event.type === "message" && event.message && event.message.type === "text"
+type TextEvent = MessageEvent & { message: TextEventMessage }
+
+const isTextEvent = (event: WebhookEvent): event is TextEvent => {
+  return event.type === "message" && event.message.type === "text"
 }
 
 export const textEventHandler = async (
-  event: webhook.Event,
+  event: WebhookEvent,
 ): Promise<MessageAPIResponseBase | undefined> => {
-  if (!isTextEvent(event)) {
-    return
-  }
+  if (!isTextEvent(event)) return
 
   const userId = event.source.userId as string
 

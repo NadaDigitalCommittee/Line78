@@ -41,11 +41,11 @@ discord.on("messageCreate", async (message) => {
   const button = new ButtonBuilder()
     .setCustomId(`send/${userId}`)
     .setLabel("送信")
-    .setStyle(ButtonStyle.Danger)
+    .setStyle(ButtonStyle.Primary)
   const button2 = new ButtonBuilder()
     .setCustomId("delete")
     .setEmoji("🗑️")
-    .setStyle(ButtonStyle.Primary)
+    .setStyle(ButtonStyle.Secondary)
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button, button2)
 
   await message.reply({

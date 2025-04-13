@@ -11,7 +11,7 @@ import { getUserName, send } from "./line"
 import { ThreadDB } from "./db"
 
 const discord = new Client({
-  intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent"],
+  intents: ["Guilds", "GuildMessages", "MessageContent"],
 })
 
 discord.on("ready", async () => {

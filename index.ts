@@ -1,14 +1,8 @@
-import { HTTPFetchError, type WebhookRequestBody } from "@line/bot-sdk"
+import { HTTPFetchError, type WebhookRequestBody, validateSignature } from "@line/bot-sdk"
 import { type Env as EnvBase } from "hono"
 import { textEventHandler } from "./line"
 import { Hono } from "hono"
 import { ApplicationIntegrationType, PermissionFlagsBits } from "discord.js"
-
-const verifySignature = (body: string, secret: string, signature: string) => {
-  const hmac = new Bun.CryptoHasher("sha256", secret)
-  hmac.update(body)
-  return hmac.digest("base64") === signature
-}
 
 interface Env extends EnvBase {
   Variables: {
@@ -42,13 +36,12 @@ const app = new Hono<Env>()
   .post(
     "/line",
     async (c, next) => {
-      const rawBody = await c.req.raw.clone().arrayBuffer()
+      const rawBody = Buffer.from(await c.req.arrayBuffer())
       const signature = c.req.header("x-line-signature")
-      const bodyText = new TextDecoder().decode(rawBody)
       const isValid =
-        !!signature && verifySignature(bodyText, Bun.env.LINE_CHANNEL_SECRET, signature)
+        !!signature && validateSignature(rawBody, Bun.env.LINE_CHANNEL_SECRET, signature)
       if (!isValid) return c.text("Invalid signature", 403)
-      c.set("lineReq", JSON.parse(bodyText) as WebhookRequestBody)
+      c.set("lineReq", JSON.parse(new TextDecoder().decode(rawBody)) as WebhookRequestBody)
       return await next()
     },
     async (c) => {

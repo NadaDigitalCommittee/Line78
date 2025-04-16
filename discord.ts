@@ -22,7 +22,7 @@ discord.on("ready", async () => {
 discord.login(Bun.env.DISCORD_TOKEN)
 
 const getMessageContent = (message: Message) =>
-  message.content.replace(new RegExp(`<@!?${Bun.env.DISCORD_CLIENT_ID}>`, "g"), "").trim()
+  message.content.replace(new RegExp(`\\s*<@!?${Bun.env.DISCORD_CLIENT_ID}>\\s*`, "g"), "").trim()
 
 discord.on("messageCreate", async (message) => {
   if (message.author.bot) return

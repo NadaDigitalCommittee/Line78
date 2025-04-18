@@ -30,14 +30,15 @@ export const textEventHandler = async (
 
   const userId = event.source.userId
   if (!userId) return
+  const { text } = event.message
   await MessageDB.create({
-    text: event.message.text,
+    text,
     userId,
     dateTime: event.timestamp,
   } satisfies MessageData)
   const thread = await fetchThreadFromUserId(userId)
 
-  if (event.message.text?.includes("質問")) {
+  if (text && /^(質問|問い合わせ)$/.test(text)) {
     if (thread) return
     const messages = await MessageDB.aggregate<MessageData>([
       { $match: { userId } },
@@ -47,7 +48,7 @@ export const textEventHandler = async (
     await createThreadAndSendMessages(userId, messages.reverse())
     return
   }
-  if (thread) await thread.send(`>>> ${event.message.text}`)
+  if (thread) await thread.send(`>>> ${text}`)
 }
 
 export async function send(

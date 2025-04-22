@@ -36,6 +36,10 @@ discord.on("messageCreate", async (message) => {
 
   const messageContent = getMessageContent(message)
   if (!messageContent) return
+  if (/^resolve$/i.test(messageContent)) {
+    markAsResolved(channel)
+    return
+  }
   const { userId } = (await ThreadDB.findOne({ threadId: channel.id })) ?? {}
   if (!userId) return
   const button = new ButtonBuilder()

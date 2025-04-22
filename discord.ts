@@ -77,6 +77,9 @@ discord.on("interactionCreate", async (interaction) => {
       const attachments = replyMessage.attachments
       try {
         await send(messageContent, userId, attachments)
+        if (interaction.channel?.isThread()) {
+          markAsResolved(interaction.channel)
+        }
         await replyMessage.reply({
           content: "送信しました。",
         })
@@ -103,6 +106,25 @@ const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
   hour12: false,
 })
 
+const unresolvedIndicator = "🟢【未対応】"
+
+export const isUnresolved = (thread: TextThreadChannel) =>
+  thread.name.startsWith(unresolvedIndicator)
+
+export const markAsResolved = (thread: TextThreadChannel) => {
+  if (!isUnresolved(thread)) return
+  void thread.edit({
+    name: thread.name.replace(unresolvedIndicator, ""),
+  })
+}
+
+export const markAsUnresolved = (thread: TextThreadChannel) => {
+  if (isUnresolved(thread)) return
+  void thread.edit({
+    name: `${unresolvedIndicator}${thread.name}`,
+  })
+}
+
 export async function createThreadAndSendMessages(userId: string, messages: MessageData[]) {
   const channel = (await discord.channels.fetch(Bun.env.DISCORD_CHANNEL_ID)) as TextChannel
   const messageContents = messages.map((m) => m.text)
@@ -110,7 +132,7 @@ export async function createThreadAndSendMessages(userId: string, messages: Mess
 
   const username = await getUsername(userId)
   const created = await channel.threads.create({
-    name: `${timestamp}-${username}`,
+    name: `${unresolvedIndicator}${timestamp}-${username}`,
     autoArchiveDuration: 1440,
     type: ChannelType.PublicThread,
   })

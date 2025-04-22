@@ -7,7 +7,7 @@ import {
   type TextEventMessage,
   type WebhookEvent,
 } from "@line/bot-sdk"
-import { fetchThreadFromUserId, createThreadAndSendMessages } from "./discord"
+import { fetchThreadFromUserId, createThreadAndSendMessages, markAsUnresolved } from "./discord"
 import { MessageDB, type MessageData } from "./db"
 import type { Attachment, Collection } from "discord.js"
 
@@ -48,7 +48,10 @@ export const textEventHandler = async (
     await createThreadAndSendMessages(userId, messages.reverse())
     return
   }
-  if (thread) await thread.send(`>>> ${text}`)
+  if (thread) {
+    await thread.send(`>>> ${text}`)
+    markAsUnresolved(thread)
+  }
 }
 
 export async function send(

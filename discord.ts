@@ -151,11 +151,15 @@ export async function fetchThreadFromUserId(userId: string) {
   const { threadId } = (await ThreadDB.findOne({ userId })) ?? {}
   return (
     threadId
-      ? await discord.channels.fetch(threadId).catch(async (e) => {
-          console.error(e)
-          await ThreadDB.deleteOne({ userId })
-          return null
-        })
+      ? await discord.channels
+          .fetch(threadId, {
+            force: true,
+          })
+          .catch(async (e) => {
+            console.error(e)
+            await ThreadDB.deleteOne({ userId })
+            return null
+          })
       : null
   ) as TextThreadChannel | null
 }

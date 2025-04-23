@@ -41,11 +41,17 @@ export const textEventHandler = async (
   if (text && /^(質問|問い合わせ)$/.test(text)) {
     if (thread) return
     const messages = await MessageDB.aggregate<MessageData>([
-      { $match: { userId } },
-      { $sort: { dateTime: -1 } },
-      { $limit: 4 },
+      {
+        $match: {
+          userId,
+          dateTime: {
+            $gte: Date.now() - 15 * 60 * 1000,
+          },
+        },
+      },
+      { $sort: { dateTime: 1 } },
     ]).exec()
-    await createThreadAndSendMessages(userId, messages.reverse())
+    await createThreadAndSendMessages(userId, messages)
     return
   }
   if (thread) {

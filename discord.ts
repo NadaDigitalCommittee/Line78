@@ -1,8 +1,10 @@
 import {
   ActionRowBuilder,
   ButtonBuilder,
+  ButtonInteraction,
   ButtonStyle,
   ChannelType,
+  ChatInputCommandInteraction,
   Client,
   Message,
   TextChannel,
@@ -36,10 +38,6 @@ discord.on("messageCreate", async (message) => {
 
   const messageContent = getMessageContent(message)
   if (!messageContent && !message.attachments.size) return
-  if (/^resolve$/i.test(messageContent)) {
-    markAsResolved(channel)
-    return
-  }
   const { userId } = (await ThreadDB.findOne({ threadId: channel.id })) ?? {}
   if (!userId) return
   const button = new ButtonBuilder()
@@ -58,8 +56,7 @@ discord.on("messageCreate", async (message) => {
   })
 })
 
-discord.on("interactionCreate", async (interaction) => {
-  if (!interaction.isButton()) return
+async function buttonHandler(interaction: ButtonInteraction) {
   if (!interaction.message.author.bot) return
   const mode = interaction.customId.split("/")[0]
   switch (mode) {
@@ -98,6 +95,42 @@ discord.on("interactionCreate", async (interaction) => {
       await interaction.message.delete()
       break
   }
+}
+
+async function slashCommandHandler(interaction: ChatInputCommandInteraction) {
+  const { channel } = interaction
+  if (!channel?.isThread() || channel.parentId !== Bun.env.DISCORD_CHANNEL_ID) {
+    await interaction.reply({
+      content: ":question: 不明なスレッド",
+    })
+    return
+  }
+  switch (interaction.commandName) {
+    case "resolve":
+      markAsResolved(channel)
+      break
+    case "close":
+      void ThreadDB.deleteOne({ threadId: channel.id })
+      void channel.setLocked(true)
+      break
+    default:
+      await interaction.reply({
+        content: ":question: 不明なコマンド",
+      })
+      return
+  }
+  await interaction.reply({
+    content: ":white_check_mark: 完了",
+  })
+  return
+}
+
+discord.on("interactionCreate", async (interaction) => {
+  if (interaction.isButton()) {
+    await buttonHandler(interaction)
+  } else if (interaction.isChatInputCommand()) {
+    await slashCommandHandler(interaction)
+  }
 })
 
 const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
@@ -111,17 +144,18 @@ const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
 
 const unresolvedIndicator = "🟢【未対応】"
 
-export const isUnresolved = (thread: TextThreadChannel) =>
-  thread.name.startsWith(unresolvedIndicator)
+export function isUnresolved(thread: TextThreadChannel) {
+  return thread.name.startsWith(unresolvedIndicator)
+}
 
-export const markAsResolved = (thread: TextThreadChannel) => {
+export function markAsResolved(thread: TextThreadChannel) {
   if (!isUnresolved(thread)) return
   void thread.edit({
     name: thread.name.replace(unresolvedIndicator, ""),
   })
 }
 
-export const markAsUnresolved = (thread: TextThreadChannel) => {
+export function markAsUnresolved(thread: TextThreadChannel) {
   if (isUnresolved(thread)) return
   void thread.edit({
     name: `${unresolvedIndicator}${thread.name}`,

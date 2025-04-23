@@ -4,7 +4,8 @@
   "type": "module",
   "main": "./index.ts",
   "scripts": {
-    "dev": "bun --env-file=./.env.dev run --watch index.ts"
+    "dev": "bun --env-file=./.env.dev run --watch index.ts",
+    "register": "bun --env-file=./.env.prod run register.ts"
   },
   "dependencies": {
     "@line/bot-sdk": "^9.8.0",

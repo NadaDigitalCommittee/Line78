@@ -23,7 +23,8 @@ const app = new Hono<Env>()
       PermissionFlagsBits.ManageThreads |
       PermissionFlagsBits.ReadMessageHistory |
       PermissionFlagsBits.SendMessages |
-      PermissionFlagsBits.ViewChannel
+      PermissionFlagsBits.ViewChannel |
+      PermissionFlagsBits.UseApplicationCommands
     const oAuth2Url = new URL("https://discord.com/oauth2/authorize")
     oAuth2Url.search = new URLSearchParams({
       permissions: `${permissions}`,

@@ -55,32 +55,34 @@ export const textEventHandler = async (
 }
 
 export async function send(
-  message: string,
   userId: string,
+  messageContent?: string,
   attachments?: Collection<string, Attachment>,
 ) {
-  const attachmentsToSend = attachments?.map(({ url, contentType }): messagingApi.Message => {
+  const messages: messagingApi.Message[] = []
+  if (messageContent) {
+    messages.push({
+      type: "text",
+      text: messageContent,
+    })
+  }
+  attachments?.forEach(({ url, contentType }) => {
     switch (contentType) {
       case "image/png":
       case "image/jpeg":
-        return {
+        messages.push({
           type: "image",
           originalContentUrl: url,
           previewImageUrl: url,
-        }
+        })
+        break
       default:
         throw new Error("この形式のファイルには対応していません。")
     }
   })
   await client.pushMessage({
     to: userId,
-    messages: [
-      {
-        type: "text",
-        text: message,
-      },
-      ...(attachmentsToSend ?? []),
-    ],
+    messages,
   })
 }
 

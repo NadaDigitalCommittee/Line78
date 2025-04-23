@@ -35,7 +35,7 @@ discord.on("messageCreate", async (message) => {
   if (!channel.isThread()) return
 
   const messageContent = getMessageContent(message)
-  if (!messageContent) return
+  if (!messageContent && !message.attachments.size) return
   if (/^resolve$/i.test(messageContent)) {
     markAsResolved(channel)
     return
@@ -78,9 +78,8 @@ discord.on("interactionCreate", async (interaction) => {
         return
       }
       const messageContent = getMessageContent(replyMessage)
-      const attachments = replyMessage.attachments
       try {
-        await send(messageContent, userId, attachments)
+        await send(userId, messageContent, replyMessage.attachments)
         if (interaction.channel?.isThread()) {
           markAsResolved(interaction.channel)
         }

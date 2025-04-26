@@ -7,11 +7,12 @@ import {
   ChatInputCommandInteraction,
   Client,
   Message,
-  TextChannel,
+  unorderedList,
   type TextThreadChannel,
 } from "discord.js"
 import { getUsername, send } from "./line"
 import { ThreadDB, type MessageData, type ThreadData } from "./db"
+import assert from "node:assert/strict"
 
 const discord = new Client({
   intents: ["Guilds", "GuildMessages", "MessageContent"],
@@ -21,7 +22,10 @@ discord.on("ready", async () => {
   console.log("Bot is ready")
 })
 
-discord.login(Bun.env.DISCORD_TOKEN)
+await discord.login(Bun.env.DISCORD_TOKEN)
+
+const involvedChannel = await discord.channels.fetch(Bun.env.DISCORD_CHANNEL_ID)
+assert.ok(involvedChannel?.type === ChannelType.GuildText)
 
 const getMessageContent = (message: Message) =>
   message.content.replace(new RegExp(`\\s*<@!?${Bun.env.DISCORD_CLIENT_ID}>\\s*`, "g"), "").trim()
@@ -97,31 +101,52 @@ async function buttonHandler(interaction: ButtonInteraction) {
   }
 }
 
-async function slashCommandHandler(interaction: ChatInputCommandInteraction) {
+const slashCommandHandler = async (interaction: ChatInputCommandInteraction) => {
   const { channel } = interaction
-  if (!channel?.isThread() || channel.parentId !== Bun.env.DISCORD_CHANNEL_ID) {
-    await interaction.reply({
-      content: ":question: 不明なスレッド",
-    })
-    return
-  }
+  const isInInvolvedThread = channel?.isThread() && channel.parentId !== Bun.env.DISCORD_CHANNEL_ID
   switch (interaction.commandName) {
     case "resolve":
-      markAsResolved(channel)
-      break
+      if (isInInvolvedThread) {
+        markAsResolved(channel)
+        await interaction.reply({
+          content: ":white_check_mark: 完了",
+        })
+      } else {
+        await interaction.reply({
+          content: ":question: 不明なスレッド",
+        })
+      }
+      return
     case "close":
-      void ThreadDB.deleteOne({ threadId: channel.id })
-      void channel.setLocked(true)
-      break
+      if (isInInvolvedThread) {
+        void ThreadDB.deleteOne({ threadId: channel.id })
+        void channel.setLocked(true)
+        await interaction.reply({
+          content: ":white_check_mark: 完了",
+        })
+      } else {
+        await interaction.reply({
+          content: ":question: 不明なスレッド",
+        })
+      }
+      return
+    case "unresolved":
+      const { threads } = await involvedChannel.threads.fetch()
+      const unresolvedThreads = threads
+        .filter((thread) => isUnresolved(thread as TextThreadChannel))
+        .map((thread) => thread.url)
+      interaction.reply({
+        content: unresolvedThreads.length
+          ? unorderedList(unresolvedThreads)
+          : ":smiling_face_with_3_hearts: すべての問い合わせに対応済みです。",
+      })
+      return
     default:
       await interaction.reply({
         content: ":question: 不明なコマンド",
       })
       return
   }
-  await interaction.reply({
-    content: ":white_check_mark: 完了",
-  })
   return
 }
 
@@ -162,13 +187,11 @@ export function markAsUnresolved(thread: TextThreadChannel) {
   })
 }
 
-export async function createThreadAndSendMessages(userId: string, messages: MessageData[]) {
-  const channel = (await discord.channels.fetch(Bun.env.DISCORD_CHANNEL_ID)) as TextChannel
+export const createThreadAndSendMessages = async (userId: string, messages: MessageData[]) => {
   const messageContents = messages.map((m) => m.text)
   const timestamp = dateFormatter.format(messages.at(-1)?.dateTime)
-
   const username = await getUsername(userId)
-  const created = await channel.threads.create({
+  const created = await involvedChannel.threads.create({
     name: `${unresolvedIndicator}${timestamp}-${username}`,
     autoArchiveDuration: 1440,
     type: ChannelType.PublicThread,

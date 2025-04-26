@@ -10,12 +10,17 @@ const close = new SlashCommandBuilder()
   .setDescription("スレッドを終了します。")
   .setContexts(InteractionContextType.Guild)
 
+const unresolved = new SlashCommandBuilder()
+  .setName("unresolved")
+  .setDescription("未対応のスレッドを一覧します。")
+  .setContexts(InteractionContextType.Guild)
+
 const rest = new REST({ version: "10" }).setToken(Bun.env.DISCORD_TOKEN)
 
 console.log("Registering commands...")
 await rest
   .put(Routes.applicationCommands(Bun.env.DISCORD_CLIENT_ID), {
-    body: [resolve, close],
+    body: [resolve, close, unresolved],
   })
   .then(() => {
     console.log("✓ Success")

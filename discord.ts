@@ -131,11 +131,12 @@ const slashCommandHandler = async (interaction: ChatInputCommandInteraction) => 
       }
       return
     case "unresolved":
+      await interaction.deferReply()
       const { threads } = await involvedChannel.threads.fetch()
       const unresolvedThreads = threads
         .filter((thread) => isUnresolved(thread as TextThreadChannel))
         .map((thread) => thread.url)
-      interaction.reply({
+      interaction.editReply({
         content: unresolvedThreads.length
           ? unorderedList(unresolvedThreads)
           : ":smiling_face_with_3_hearts: すべての問い合わせに対応済みです。",

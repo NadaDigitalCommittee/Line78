@@ -9,7 +9,7 @@ import {
 } from "@line/bot-sdk"
 import { fetchThreadFromUserId, createThreadAndSendMessages, markAsUnresolved } from "./discord"
 import { MessageDB, type MessageData } from "./db"
-import type { Attachment, Collection } from "discord.js"
+import { blockQuote, type Attachment, type Collection } from "discord.js"
 
 const clientConfig: ClientConfig = {
   channelAccessToken: Bun.env.LINE_CHANNEL_ACCESS_TOKEN,
@@ -38,7 +38,7 @@ export const textEventHandler = async (
   }
   const thread = await fetchThreadFromUserId(userId)
   if (thread) {
-    await thread.send(`>>> ${text}`)
+    await thread.send(blockQuote(text))
     markAsUnresolved(thread)
   } else if (/^(質問|問い合わせ)$/.test(text)) {
     const messages = await MessageDB.aggregate<MessageData>([

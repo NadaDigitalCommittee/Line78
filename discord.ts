@@ -103,7 +103,7 @@ async function buttonHandler(interaction: ButtonInteraction) {
 
 const slashCommandHandler = async (interaction: ChatInputCommandInteraction) => {
   const { channel } = interaction
-  const isInInvolvedThread = channel?.isThread() && channel.parentId !== Bun.env.DISCORD_CHANNEL_ID
+  const isInInvolvedThread = channel?.isThread() && channel.parentId === Bun.env.DISCORD_CHANNEL_ID
   switch (interaction.commandName) {
     case "resolve":
       if (isInInvolvedThread) {

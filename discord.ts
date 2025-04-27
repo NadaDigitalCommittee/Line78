@@ -119,7 +119,7 @@ const slashCommandHandler = async (interaction: ChatInputCommandInteraction) => 
       return
     case "close":
       if (isInInvolvedThread) {
-        void ThreadDB.deleteOne({ threadId: channel.id })
+        await ThreadDB.deleteOne({ threadId: channel.id })
         void channel.setLocked(true)
         await interaction.reply({
           content: ":white_check_mark: 完了",

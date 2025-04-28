@@ -7,7 +7,7 @@ const resolve = new SlashCommandBuilder()
 
 const close = new SlashCommandBuilder()
   .setName("close")
-  .setDescription("スレッドを終了します。")
+  .setDescription("スレッドを対応済みとマークして終了します。")
   .setContexts(InteractionContextType.Guild)
 
 const unresolved = new SlashCommandBuilder()

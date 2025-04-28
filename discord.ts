@@ -121,7 +121,6 @@ const slashCommandHandler = async (interaction: ChatInputCommandInteraction) => 
       if (isInInvolvedThread) {
         await ThreadDB.deleteOne({ threadId: channel.id })
         markAsResolved(channel)
-        void channel.setArchived(true)
         await interaction.reply({
           content: ":white_check_mark: 完了",
         })

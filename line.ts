@@ -48,7 +48,7 @@ export const messageEventHandler = async (
       case "audio":
         return "*\\[AUDIO\\]*"
       case "location":
-        return "*\\[LOCATION\\]*"
+        return `*\\[LOCATION\\]*\\: [${event.message.address}](https://www.google.com/maps/@${event.message.latitude},${event.message.longitude},20z)`
       case "file":
         return "*\\[FILE\\]*"
       case "sticker":

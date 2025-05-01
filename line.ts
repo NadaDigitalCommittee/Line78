@@ -28,6 +28,8 @@ const blobClient = new messagingApi.MessagingApiBlobClient(clientConfig)
 
 const isMessageEvent = (event: WebhookEvent): event is MessageEvent => event.type === "message"
 
+const DISCORD_MAX_ATTACHMENT_SIZE = 10 * 1e6
+
 export const messageEventHandler = async (
   event: WebhookEvent,
 ): Promise<MessageAPIResponseBase | undefined> => {
@@ -62,7 +64,10 @@ export const messageEventHandler = async (
   }
   const thread = await fetchThreadFromUserId(userId)
   if (thread) {
-    const files: [...NonNullable<MessageCreateOptions["files"]>] = []
+    const messageBody = {
+      content: blockQuote(text),
+      files: [] as [...NonNullable<MessageCreateOptions["files"]>],
+    } satisfies MessageCreateOptions
     if (hasAttachments) {
       const readable = await blobClient.getMessageContent(event.message.id)
       const chunks: Buffer[] = []
@@ -71,19 +76,20 @@ export const messageEventHandler = async (
       }
       const buffer = Buffer.concat(chunks)
       const fileTypeResult = await fileTypeFromBuffer(buffer)
-      files.push(
-        new AttachmentBuilder(buffer, {
-          name:
-            event.message.type === "file"
-              ? event.message.fileName
-              : `${event.message.type}.${fileTypeResult?.ext ?? "bin"}`,
-        }),
-      )
+      if (DISCORD_MAX_ATTACHMENT_SIZE < buffer.byteLength) {
+        messageBody.content += "\\: :warning: ファイルが大きすぎて添付できません。"
+      } else {
+        messageBody.files.push(
+          new AttachmentBuilder(buffer, {
+            name:
+              event.message.type === "file"
+                ? event.message.fileName
+                : `${event.message.type}.${fileTypeResult?.ext ?? "bin"}`,
+          }),
+        )
+      }
     }
-    await thread.send({
-      content: blockQuote(text),
-      files,
-    })
+    await thread.send(messageBody)
     markAsUnresolved(thread)
   } else if (/^(質問|問い合わせ)$/.test(text)) {
     const messages = await MessageDB.aggregate<MessageData>([

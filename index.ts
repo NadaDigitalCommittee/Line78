@@ -1,6 +1,6 @@
 import { HTTPFetchError, type WebhookRequestBody, validateSignature } from "@line/bot-sdk"
 import { type Env as EnvBase } from "hono"
-import { textEventHandler } from "./line"
+import { messageEventHandler } from "./line"
 import { Hono } from "hono"
 import { ApplicationIntegrationType, PermissionFlagsBits } from "discord.js"
 
@@ -52,7 +52,7 @@ const app = new Hono<Env>()
       const results = await Promise.all(
         events.map(async (event) => {
           try {
-            await textEventHandler(event)
+            await messageEventHandler(event)
           } catch (err: unknown) {
             if (err instanceof HTTPFetchError) {
               console.error(err.status)

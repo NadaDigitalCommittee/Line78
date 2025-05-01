@@ -4,7 +4,6 @@ import {
   type MessageEvent,
   type MessageAPIResponseBase,
   messagingApi,
-  type TextEventMessage,
   type WebhookEvent,
 } from "@line/bot-sdk"
 import { fetchThreadFromUserId, createThreadAndSendMessages, markAsUnresolved } from "./discord"
@@ -17,20 +16,33 @@ const clientConfig: ClientConfig = {
 
 const client = new messagingApi.MessagingApiClient(clientConfig)
 
-type TextEvent = MessageEvent & { message: TextEventMessage }
+const isMessageEvent = (event: WebhookEvent): event is MessageEvent => event.type === "message"
 
-const isTextEvent = (event: WebhookEvent): event is TextEvent => {
-  return event.type === "message" && event.message.type === "text"
-}
-
-export const textEventHandler = async (
+export const messageEventHandler = async (
   event: WebhookEvent,
 ): Promise<MessageAPIResponseBase | undefined> => {
-  if (!isTextEvent(event)) return
+  if (!isMessageEvent(event)) return
 
   const userId = event.source.userId
   if (!userId) return
-  const { text } = event.message
+  const text = (() => {
+    switch (event.message.type) {
+      case "text":
+        return event.message.text
+      case "image":
+        return "*\\[IMAGE\\]*"
+      case "video":
+        return "*\\[VIDEO\\]*"
+      case "audio":
+        return "*\\[AUDIO\\]*"
+      case "location":
+        return "*\\[LOCATION\\]*"
+      case "file":
+        return "*\\[FILE\\]*"
+      case "sticker":
+        return "*\\[STICKER\\]*"
+    }
+  })()
   const eventMessage: MessageData = {
     text,
     userId,

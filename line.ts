@@ -5,16 +5,26 @@ import {
   type MessageAPIResponseBase,
   messagingApi,
   type WebhookEvent,
+  type EventMessage,
 } from "@line/bot-sdk"
 import { fetchThreadFromUserId, createThreadAndSendMessages, markAsUnresolved } from "./discord"
 import { MessageDB, type MessageData } from "./db"
-import { blockQuote, type Attachment, type Collection } from "discord.js"
+import {
+  AttachmentBuilder,
+  blockQuote,
+  type Attachment,
+  type Collection,
+  type MessageCreateOptions,
+} from "discord.js"
+import { fileTypeFromBuffer } from "file-type"
+import { Buffer } from "node:buffer"
 
 const clientConfig: ClientConfig = {
   channelAccessToken: Bun.env.LINE_CHANNEL_ACCESS_TOKEN,
 }
 
 const client = new messagingApi.MessagingApiClient(clientConfig)
+const blobClient = new messagingApi.MessagingApiBlobClient(clientConfig)
 
 const isMessageEvent = (event: WebhookEvent): event is MessageEvent => event.type === "message"
 
@@ -43,6 +53,8 @@ export const messageEventHandler = async (
         return "*\\[STICKER\\]*"
     }
   })()
+  const mediaMessageTypes: EventMessage["type"][] = ["image", "video", "audio", "file"]
+  const hasAttachments = mediaMessageTypes.includes(event.message.type)
   const eventMessage: MessageData = {
     text,
     userId,
@@ -50,7 +62,28 @@ export const messageEventHandler = async (
   }
   const thread = await fetchThreadFromUserId(userId)
   if (thread) {
-    await thread.send(blockQuote(text))
+    const files: [...NonNullable<MessageCreateOptions["files"]>] = []
+    if (hasAttachments) {
+      const readable = await blobClient.getMessageContent(event.message.id)
+      const chunks: Buffer[] = []
+      for await (const chunk of readable) {
+        chunks.push(chunk)
+      }
+      const buffer = Buffer.concat(chunks)
+      const fileTypeResult = await fileTypeFromBuffer(buffer)
+      files.push(
+        new AttachmentBuilder(buffer, {
+          name:
+            event.message.type === "file"
+              ? event.message.fileName
+              : `${event.message.type}.${fileTypeResult?.ext ?? "bin"}`,
+        }),
+      )
+    }
+    await thread.send({
+      content: blockQuote(text),
+      files,
+    })
     markAsUnresolved(thread)
   } else if (/^(質問|問い合わせ)$/.test(text)) {
     const messages = await MessageDB.aggregate<MessageData>([

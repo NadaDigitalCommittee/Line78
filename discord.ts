@@ -36,7 +36,7 @@ discord.on("messageCreate", async (message) => {
     message.reference?.messageId &&
     (await message.channel.messages.fetch(message.reference.messageId))
   const hasMention = discord.user && message.mentions.has(discord.user)
-  if (!(repliedMessage || hasMention)) return
+  if (!((repliedMessage && repliedMessage.author.bot) || hasMention)) return
   const channel = repliedMessage ? repliedMessage.channel : message.channel
   if (!channel.isThread()) return
 

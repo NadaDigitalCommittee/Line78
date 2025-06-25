@@ -12,6 +12,20 @@ LINE公式アカウントの操作画面では、大人数に対し対応をす�
 2. WebhookによりユーザーID、チャンネルIDを取得する。
 3. Discord上でスレッドを作成し、チャンネル名にユーザーID、チャンネルIDを記載する。
 
+## コマンド
+
+- `/resolve`
+
+  スレッドで実行すると、そのスレッドを対応済みとマークする。お礼メッセージなど返信する必要がない場合に使う想定
+
+- `/close`
+
+  スレッドで実行すると、そのスレッドを対応済みとマークし、さらに DB 上の スレッド ID ⇄ LINE のユーザー ID の紐づけを削除する。
+
+- `/unresolved`
+
+  未対応のスレッドを一覧表示する。
+
 ## 環境変数について
 
 https://developers.line.biz/ja/reference/messaging-api/#issue-shortlived-channel-access-token
